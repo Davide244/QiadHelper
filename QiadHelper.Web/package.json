@@ -1,0 +1,15 @@
+{
+  "name": "qiadhelper.web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:ts": "tsc",
+    "check:views": "node tools/check-inline-scripts.mjs",
+    "build": "npm run check:views && npm run build:ts",
+    "dev": "npm run check:views && npm run build:ts"
+  },
+  "devDependencies": {
+    "acorn": "^8.14.0",
+    "typescript": "^5.4.0"
+  }
+}

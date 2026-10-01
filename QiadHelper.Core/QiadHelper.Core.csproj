@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>QiadHelper.Core</AssemblyName>
+    <RootNamespace>QiadHelper.Core</RootNamespace>
+    <Description>Shared core library containing domain entities, EF Core context, migrations, and application services for QIAD Helper</Description>
+  </PropertyGroup>
+
+  <!-- Entity Framework Core (PostgreSQL) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- QiadContext doubles as the DataProtection key store (design §13.5) -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <!-- Abstractions for the in-process notification dispatcher -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+</Project>

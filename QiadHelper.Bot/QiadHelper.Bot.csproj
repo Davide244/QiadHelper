@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>QiadHelper.Bot</AssemblyName>
+    <RootNamespace>QiadHelper.Bot</RootNamespace>
+    <Description>Discord bot class library for QIAD Helper — hosted in-process by QiadHelper.Web</Description>
+  </PropertyGroup>
+
+  <!-- Hosting (BackgroundService and friends; the actual host is QiadHelper.Web) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
+  <!-- Discord -->
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" />
+    <PackageReference Include="Discord.Net.Interactions" />
+  </ItemGroup>
+
+  <!-- Project References -->
+  <ItemGroup>
+    <ProjectReference Include="..\QiadHelper.Core\QiadHelper.Core.csproj" />
+  </ItemGroup>
+
+</Project>

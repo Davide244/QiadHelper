@@ -1,0 +1,60 @@
+@model AdminCaseListViewModel
+@{
+    ViewData["Title"] = "Cases (staff)";
+}
+
+<h1>Cases (staff view)</h1>
+<p class="lead">Includes pre-number submissions and sealed cases the public never sees.</p>
+
+<form method="get" class="filters">
+    <select name="status">
+        <option value="">Any status</option>
+        @foreach (var status in Enum.GetValues<CaseStatus>())
+        {
+            <option value="@status" selected="@(status == Model.StatusFilter)">@status</option>
+        }
+    </select>
+    <button type="submit" class="btn secondary">Filter</button>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Appellant</th>
+        <th>Submitted</th>
+        <th>Claimed by</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var c in Model.Cases.Items)
+    {
+        <tr>
+            <td>@(c.CaseNumber?.ToString() ?? "—")</td>
+            <td>@(c.IsUnfair ? $"Unfair {c.Category?.Name}" : c.Category?.Name)</td>
+            <td>@c.Status</td>
+            <td>@c.AppellantDiscordUsername</td>
+            <td>@c.SubmittedAt.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@(c.ClaimedByUsername ?? "—")</td>
+            <td><a class="btn secondary small" asp-action="Detail" asp-route-id="@c.Id">Open</a></td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div class="pager">
+    @if (Model.Cases.Page > 1)
+    {
+        <a class="btn secondary small" asp-action="Index" asp-route-page="@(Model.Cases.Page - 1)"
+           asp-route-status="@Model.StatusFilter">‹ Newer</a>
+    }
+    <span>Page @Model.Cases.Page of @Math.Max(Model.Cases.TotalPages, 1) · @Model.Cases.TotalCount cases</span>
+    @if (Model.Cases.Page < Model.Cases.TotalPages)
+    {
+        <a class="btn secondary small" asp-action="Index" asp-route-page="@(Model.Cases.Page + 1)"
+           asp-route-status="@Model.StatusFilter">Older ›</a>
+    }
+</div>

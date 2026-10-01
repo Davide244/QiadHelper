@@ -1,0 +1,25 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": true,
+    "sourceMap": false,
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "outDir": "wwwroot/js",
+    "rootDir": "ClientScripts",
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "include": [
+    "ClientScripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "wwwroot",
+    "bin",
+    "obj"
+  ]
+}

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="QiadHelper.Bot/QiadHelper.Bot.csproj" />
+  <Project Path="QiadHelper.Core/QiadHelper.Core.csproj" />
+  <Project Path="QiadHelper.Web/QiadHelper.Web.csproj" />
+</Solution>

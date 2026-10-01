@@ -1,0 +1,68 @@
+# QIAD Helper — dev/self-host compose (design §13.2): builds the app image locally.
+# `docker compose up` on any Docker host brings up the whole stack; a fresh boot
+# self-provisions (migrations + seed run before the app serves traffic).
+services:
+  qiad-app:
+    build:
+      context: .
+      dockerfile: QiadHelper.Web/Dockerfile
+    container_name: qiad-app
+    restart: unless-stopped
+    depends_on:
+      qiad-db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Qiad=Host=qiad-db;Database=${POSTGRES_DB:-qiad};Username=${POSTGRES_USER:-qiad};Password=${POSTGRES_PASSWORD}
+      # Discord application (bot token + OAuth credentials for the web login)
+      - Discord__BotToken=${DISCORD_BOT_TOKEN:-}
+      - Discord__ClientId=${DISCORD_CLIENT_ID:-}
+      - Discord__ClientSecret=${DISCORD_CLIENT_SECRET:-}
+      # Bot behaviour (false = web-only, e.g. staging)
+      - Bot__Enabled=${BOT_ENABLED:-true}
+      - Bot__MainGuildId=${MAIN_GUILD_ID:-0}
+      - Bot__DevelopmentGuildId=${DEV_GUILD_ID:-0}
+      - Bot__DeveloperUserIds__0=${DEVELOPER_USER_ID:-0}
+      - Bot__StaffWorkflowMode=${STAFF_WORKFLOW_MODE:-Buttons}
+      # Guardsman verification API (optional; enables Discord to Roblox identity resolution)
+      - Guardsman__ApiKey=${GUARDSMAN_API_KEY:-}
+      - Guardsman__UserId=${GUARDSMAN_USER_ID:-}
+      # Monitoring (optional)
+      - Sentry__Dsn=${SENTRY_DSN:-}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    healthcheck:
+      # /healthz reports DB connectivity AND Discord gateway state in one place (§13.1)
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - qiad
+
+  qiad-db:
+    image: postgres:17-alpine
+    container_name: qiad-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-qiad}
+      - POSTGRES_USER=${POSTGRES_USER:-qiad}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-qiad} -d ${POSTGRES_DB:-qiad}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - qiad-db-data:/var/lib/postgresql/data
+    # Internal only — the database is never published to the host network.
+    networks:
+      - qiad
+
+volumes:
+  qiad-db-data:
+
+networks:
+  qiad:

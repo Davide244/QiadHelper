@@ -1,0 +1,37 @@
+<Project>
+  <!-- ============================================== -->
+  <!-- Common Build Properties for All Projects       -->
+  <!-- ============================================== -->
+
+  <PropertyGroup Label="Build Settings">
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+
+  <!-- ============================================== -->
+  <!-- Assembly / Product Metadata                    -->
+  <!-- ============================================== -->
+  <PropertyGroup Label="Assembly Info">
+    <Authors>D244</Authors>
+    <Company>QIAD</Company>
+    <Product>QIAD Helper</Product>
+    <Copyright>© $([System.DateTime]::Now.Year) D244 + QIAD. All rights reserved.</Copyright>
+  </PropertyGroup>
+
+  <!-- ============================================== -->
+  <!-- Output Settings                                -->
+  <!-- ============================================== -->
+  <PropertyGroup Label="Output">
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- CA1716: "Case" is the domain term; no VB consumers will ever exist.
+         CA1848/CA1873: plain ILogger calls are fine at this scale (same stance as QDF).
+         CA1861: fires on EF-generated migration code (constant array args). -->
+    <NoWarn>$(NoWarn);CS1591;CA1716;CA1848;CA1873;CA1861</NoWarn>
+  </PropertyGroup>
+
+</Project>

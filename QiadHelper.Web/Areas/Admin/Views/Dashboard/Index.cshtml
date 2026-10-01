@@ -1,0 +1,31 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<h1>Admin Dashboard</h1>
+<p class="lead">
+    <span class="status-dot @(Model.BotConnected ? "up" : "down")"></span>
+    Discord gateway @(Model.BotConnected ? "connected" : "offline")
+</p>
+
+<div class="cards">
+    <div class="card"><div class="num">@Model.Submitted</div><div class="label">Awaiting validation</div></div>
+    <div class="card"><div class="num">@Model.UnderReview</div><div class="label">Under review</div></div>
+    <div class="card"><div class="num">@Model.AwaitingRatification</div><div class="label">Awaiting ratification</div></div>
+    <div class="card"><div class="num">@Model.AwaitingVoidRatification</div><div class="label">Void requests</div></div>
+    <div class="card"><div class="num">@Model.AwaitingExecution</div><div class="label">Awaiting execution</div></div>
+    <div class="card"><div class="num">@Model.ClosedTotal</div><div class="label">Concluded cases</div></div>
+    <div class="card"><div class="num">@Model.ActiveRestrictions</div><div class="label">Active restrictions</div></div>
+</div>
+
+<div class="actions">
+    <a class="btn" asp-controller="Cases" asp-action="Index">Cases</a>
+    <a class="btn secondary" asp-controller="Categories" asp-action="Index">Case categories</a>
+    <a class="btn secondary" asp-controller="Settings" asp-action="Index">Settings</a>
+    <a class="btn secondary" asp-controller="ApiKeys" asp-action="Index">API keys</a>
+    @if (User.HasRankAtLeast(QiadRank.Director) || User.IsDeveloper())
+    {
+        <a class="btn secondary" asp-controller="Maintenance" asp-action="Index">Backup &amp; restore</a>
+    }
+</div>

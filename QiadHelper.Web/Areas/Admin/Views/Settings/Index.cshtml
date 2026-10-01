@@ -1,0 +1,118 @@
+@model AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<h1>Settings</h1>
+<p class="lead">Main guild: <strong>@(Model.MainGuildId == 0 ? "not configured" : Model.MainGuildId.ToString())</strong></p>
+
+<h2>Discord configuration</h2>
+<table>
+    <thead>
+    <tr><th>Key</th><th>Hint</th><th>Current value</th><th>Set</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var (key, hint) in AdminSettingsViewModel.KnownChannelKeys)
+    {
+        <tr>
+            <td><strong>@key</strong></td>
+            <td>@hint</td>
+            <td>@(Model.Channels.TryGetValue(key, out var v) && v != 0 ? v.ToString() : "—")</td>
+            <td>
+                <form method="post" asp-action="SetChannel" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="key" value="@key" />
+                    <input name="channelId" placeholder="ID" style="width:180px" required />
+                    <button type="submit" class="btn secondary small">Save</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h2>Rank → Discord role mapping</h2>
+<p class="lead">A user's rank is the highest mapped rank among their roles. Ratification pings mention these roles.</p>
+<table>
+    <thead>
+    <tr><th>Rank</th><th>Role ID</th><th>Label</th><th></th></tr>
+    </thead>
+    <tbody>
+    @foreach (var mapping in Model.RankRoles)
+    {
+        <tr>
+            <td><strong>@mapping.Rank.DisplayName()</strong> (@mapping.Rank.ShortName())</td>
+            <td>@mapping.DiscordRoleId</td>
+            <td>@(mapping.RoleName ?? "—")</td>
+            <td>
+                <form method="post" asp-action="DeleteRankRole" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@mapping.Id" />
+                    <button type="submit" class="btn danger small">Remove</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<form method="post" asp-action="AddRankRole" class="stacked" style="margin-top:.75rem">
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <label>Discord role ID <input name="roleId" required /></label>
+        <label>Rank
+            <select name="rank">
+                @foreach (var rank in Enum.GetValues<QiadRank>().Where(r => r != QiadRank.Unranked))
+                {
+                    <option value="@rank">@rank.DisplayName()</option>
+                }
+            </select>
+        </label>
+        <label>Label (optional) <input name="roleName" /></label>
+    </div>
+    <div><button type="submit" class="btn">Add mapping</button></div>
+</form>
+
+<h2>Restriction-role whitelist</h2>
+<p class="lead">Only these roles can be applied by /restrict and case execution. Durations are in days; empty = permanent.</p>
+<table>
+    <thead>
+    <tr><th>Name</th><th>Role ID</th><th>Default duration</th><th>Per-attempt increment</th><th>Active</th><th></th></tr>
+    </thead>
+    <tbody>
+    @foreach (var role in Model.RestrictionRoles)
+    {
+        <tr>
+            <td><strong>@role.Name</strong></td>
+            <td>@role.RoleId</td>
+            <td>@(role.DefaultDuration?.TotalDays.ToString("0.#") ?? "permanent")</td>
+            <td>@(role.PerAttemptIncrement?.TotalDays.ToString("0.#") ?? "—")</td>
+            <td>@(role.IsActive ? "✔" : "—")</td>
+            <td>
+                <form method="post" asp-action="ToggleRestrictionRole" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@role.Id" />
+                    <button type="submit" class="btn secondary small">@(role.IsActive ? "Disable" : "Enable")</button>
+                </form>
+                <form method="post" asp-action="DeleteRestrictionRole" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@role.Id" />
+                    <button type="submit" class="btn danger small">Delete</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<form method="post" asp-action="AddRestrictionRole" class="stacked" style="margin-top:.75rem">
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <label>Discord role ID <input name="roleId" required /></label>
+        <label>Name <input name="name" required /></label>
+    </div>
+    <div class="row">
+        <label>Default duration (days) <input name="defaultDays" type="number" step="0.5" min="0" /></label>
+        <label>Per-attempt increment (days) <input name="perAttemptDays" type="number" step="0.5" min="0" /></label>
+    </div>
+    <label>Description <input name="description" /></label>
+    <div><button type="submit" class="btn">Whitelist role</button></div>
+</form>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "qiad-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "QiadHelper.Web", "--no-build"],
+      "port": 5199
+    }
+  ]
+}

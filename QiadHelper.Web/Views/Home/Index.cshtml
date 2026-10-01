@@ -1,0 +1,98 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "QIAD";
+}
+
+<section class="hero">
+    <div class="hero-content container">
+        <h1>Quantum Internal Affairs Department</h1>
+        <p>
+            QIAD reviews group bans, appeals and investigations for Quantum Science.
+            Every processed appeal receives a case number and a public record on this site.
+        </p>
+        <div class="actions">
+            <a class="btn" asp-controller="Public" asp-action="Index">Browse the case database</a>
+            <a class="btn secondary" asp-controller="Public" asp-action="Stats">Statistics</a>
+        </div>
+    </div>
+</section>
+
+<div class="cards hero-stats">
+    <div class="card"><div class="num">@Model.TotalCases</div><div class="label">Cases on record</div></div>
+    <div class="card"><div class="num">@Model.TotalIncidents</div><div class="label">Incidents</div></div>
+    <div class="card"><div class="num">@Model.PendingCases</div><div class="label">Currently pending</div></div>
+    <div class="card"><div class="num">@Model.AcceptanceRate.ToString("P0")</div><div class="label">Appeals accepted</div></div>
+</div>
+
+<h2>How an appeal works</h2>
+<div class="steps">
+    <div class="step">
+        <div class="step-no">1</div>
+        <h3>File it in Discord</h3>
+        <p>
+            Appeals are filed through the QIAD bot in the QS Discord server. Pick the category
+            that matches your punishment and fill in the form; the bot confirms receipt and keeps
+            you updated by DM. Evidence can be attached there at any time.
+        </p>
+    </div>
+    <div class="step">
+        <div class="step-no">2</div>
+        <h3>Review</h3>
+        <p>
+            QIAD processes your submission. Once it is taken on it receives its case number and
+            appears here as <em>Pending</em> while the case is reviewed.
+        </p>
+    </div>
+    <div class="step">
+        <div class="step-no">3</div>
+        <h3>Verdict</h3>
+        <p>
+            You are informed of the outcome by DM, and the decision with its public reasoning
+            is published in the case database, permanently on record.
+        </p>
+    </div>
+</div>
+
+<h2>Recent verdicts</h2>
+@if (Model.RecentCases.Count == 0)
+{
+    <p class="lead">No concluded cases yet.</p>
+}
+else
+{
+    <div class="table-scroll">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Closed</th>
+                <th>Verdict</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Model.RecentCases)
+            {
+                <tr>
+                    <td class="num">@row.CaseNumber</td>
+                    <td>@row.DisplayType</td>
+                    <td class="date">@(row.Closed?.ToString("yyyy-MM-dd") ?? "—")</td>
+                    <td>
+                        @if (row.Status == CaseStatus.Voided)
+                        {
+                            <span class="badge voided">Voided</span>
+                        }
+                        else
+                        {
+                            <span class="badge @(row.Verdict?.ToString().ToLowerInvariant())">@row.Verdict</span>
+                        }
+                    </td>
+                    <td class="desc">@(row.Description ?? "")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <p><a asp-controller="Public" asp-action="Index">Browse all @Model.TotalCases cases →</a></p>
+}

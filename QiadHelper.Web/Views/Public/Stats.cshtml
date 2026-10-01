@@ -1,0 +1,91 @@
+@model PublicStatsViewModel
+@{
+    ViewData["Title"] = "Statistics";
+}
+
+<h1>Statistics</h1>
+<p class="lead">Live aggregates over the case database.</p>
+
+<div class="cards">
+    <div class="card"><div class="num">@Model.TotalCases</div><div class="label">Total cases</div></div>
+    <div class="card"><div class="num">@Model.TotalIncidents</div><div class="label">Total incidents</div></div>
+    <div class="card"><div class="num">@Model.PendingCases</div><div class="label">Pending cases</div></div>
+    <div class="card"><div class="num">@Model.OverallAcceptanceRate.ToString("P1")</div><div class="label">Acceptance rate</div></div>
+    <div class="card">
+        <div class="num">@(Model.AverageResolutionTime is { } t ? $"{t.TotalDays:0.#} d" : "—")</div>
+        <div class="label">Avg. resolution time</div>
+    </div>
+</div>
+
+<h2>Verdicts by year</h2>
+<div class="table-scroll">
+    <table>
+        <thead>
+        <tr>
+            <th>Year</th>
+            <th>Cases</th>
+            <th>Accepted</th>
+            <th>Rejected</th>
+            <th>Other</th>
+            <th>Voided</th>
+            <th>Unfair</th>
+            <th>Acceptance rate</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.ByYear.Count == 0)
+        {
+            <tr><td colspan="8" class="empty">No data yet.</td></tr>
+        }
+        @foreach (var year in Model.ByYear)
+        {
+            <tr>
+                <td>@year.Year</td>
+                <td>@year.Total</td>
+                <td>@year.Accepted</td>
+                <td>@year.Rejected</td>
+                <td class="dim">@year.Other</td>
+                <td class="dim">@year.Voided</td>
+                <td class="dim">@year.Unfair</td>
+                <td>@year.AcceptanceRate.ToString("P1")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@{
+    var years = Model.CategoriesByYear.Select(s => s.Year).Distinct().OrderBy(y => y).ToList();
+    var categories = Model.CategoriesByYear.Select(s => s.Category).Distinct().OrderBy(c => c).ToList();
+    var lookup = Model.CategoriesByYear.ToDictionary(s => (s.Category, s.Year), s => s.Count);
+}
+<h2>Case types by year</h2>
+<div class="table-scroll">
+    <table>
+        <thead>
+        <tr>
+            <th>Type</th>
+            @foreach (var year in years)
+            {
+                <th>@year</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        @if (categories.Count == 0)
+        {
+            <tr><td class="empty" colspan="@(years.Count + 1)">No data yet.</td></tr>
+        }
+        @foreach (var category in categories)
+        {
+            <tr>
+                <td>@category</td>
+                @foreach (var year in years)
+                {
+                    <td class="dim">@(lookup.TryGetValue((category, year), out var n) ? n : 0)</td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

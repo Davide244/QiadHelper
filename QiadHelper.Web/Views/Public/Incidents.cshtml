@@ -1,0 +1,56 @@
+@model PagedResult<PublicIncidentRow>
+@{
+    ViewData["Title"] = "Incidents";
+}
+
+<h1>Incidents</h1>
+<p class="lead">Investigations into high-profile users and admin-abuse reports.</p>
+
+<div class="table-scroll">
+    <table>
+        <thead>
+        <tr>
+            <th>Incident #</th>
+            <th>Report date</th>
+            <th>Status</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <tr><td colspan="4" class="empty">No incidents recorded.</td></tr>
+        }
+        @foreach (var row in Model.Items)
+        {
+            <tr>
+                <td class="num">@row.IncidentNumber</td>
+                <td class="date">@row.ReportDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    @if (row.Status is CaseStatus.Closed or CaseStatus.Voided)
+                    {
+                        <span class="badge other">Concluded</span>
+                    }
+                    else
+                    {
+                        <span class="badge pending">Pending</span>
+                    }
+                </td>
+                <td class="desc">@(row.Description ?? "")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="pager">
+    @if (Model.Page > 1)
+    {
+        <a class="btn secondary small" asp-action="Incidents" asp-route-page="@(Model.Page - 1)">‹ Newer</a>
+    }
+    <span>Page @Model.Page of @Math.Max(Model.TotalPages, 1) · @Model.TotalCount incidents</span>
+    @if (Model.Page < Model.TotalPages)
+    {
+        <a class="btn secondary small" asp-action="Incidents" asp-route-page="@(Model.Page + 1)">Older ›</a>
+    }
+</div>

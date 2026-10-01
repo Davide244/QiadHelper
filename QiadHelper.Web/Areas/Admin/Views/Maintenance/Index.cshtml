@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Backup & restore";
+}
+
+<h1>Backup &amp; restore</h1>
+<p class="lead">
+    Director-only. The export is a complete snapshot of the QIAD database (cases, evidence,
+    restrictions, configuration, audit trail). Keep it somewhere safe; it contains appellant
+    identities. For server-level backups, <code>pg_dump</code> on the database volume remains
+    the recommended companion.
+</p>
+
+<h2>Export</h2>
+<form method="post" asp-action="Export" class="stacked">
+    @Html.AntiForgeryToken()
+    <label style="display:flex;align-items:center;gap:.5rem">
+        <input type="checkbox" name="acknowledgeSensitive" value="true" />
+        I understand the file contains appellant identities and audit data, and I will store it securely.
+    </label>
+    <div><button type="submit" class="btn">Download full export (.json)</button></div>
+</form>
+
+<h2>Restore</h2>
+<div class="flash err">
+    A restore <strong>replaces the entire database</strong>: every case, category, restriction,
+    configuration entry, API key and audit record currently stored will be deleted and replaced
+    by the file's contents. You will be shown a summary and asked to confirm again before
+    anything happens.
+</div>
+<form method="post" asp-action="Upload" enctype="multipart/form-data" class="stacked">
+    @Html.AntiForgeryToken()
+    <label>
+        Backup file (.json)
+        <input type="file" name="file" accept=".json,application/json" required />
+    </label>
+    <label style="display:flex;align-items:center;gap:.5rem">
+        <input type="checkbox" name="haveCurrentExport" value="true" />
+        I have downloaded a fresh export of the current database first.
+    </label>
+    <div><button type="submit" class="btn danger">Continue to restore confirmation</button></div>
+</form>

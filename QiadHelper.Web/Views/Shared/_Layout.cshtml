@@ -1,0 +1,73 @@
+@{
+    var area = ViewContext.RouteData.Values["area"]?.ToString();
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var isAdmin = string.Equals(area, "Admin", StringComparison.OrdinalIgnoreCase);
+
+    string Active(string forController, string forAction) =>
+        !isAdmin &&
+        string.Equals(controller, forController, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(action, forAction, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} · QIAD" : "QIAD Case Database")</title>
+    <link rel="icon" type="image/png" href="~/img/logo.png" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<header class="topbar">
+    <div class="container topbar-inner">
+        <a class="brand" asp-area="" asp-controller="Home" asp-action="Index">
+            <img src="~/img/logo.png" alt="" />
+            QIAD
+            <span class="brand-sub">Case Database</span>
+        </a>
+        <nav class="nav">
+            <a class="@Active("Public", "Index")" asp-area="" asp-controller="Public" asp-action="Index">Cases</a>
+            <a class="@Active("Public", "Incidents")" asp-area="" asp-controller="Public" asp-action="Incidents">Incidents</a>
+            <a class="@Active("Public", "Stats")" asp-area="" asp-controller="Public" asp-action="Stats">Statistics</a>
+            @if (User.HasRankAtLeast(QiadRank.ProbationaryAffairs) || User.IsDeveloper())
+            {
+                <a class="@(isAdmin ? "active" : "")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a>
+            }
+        </nav>
+        <div class="auth">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <span class="user">@User.GetDiscordUsername()@if (User.GetRank() is { } r && r != QiadRank.Unranked)
+                                   {<text> · <span class="rank">@r.ShortName()</span></text>}</span>
+                <form method="post" asp-area="" asp-controller="Auth" asp-action="Logout" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-link">Sign out</button>
+                </form>
+            }
+            else
+            {
+                <a class="btn btn-link" asp-area="" asp-controller="Auth" asp-action="Login">Staff sign-in</a>
+            }
+        </div>
+    </div>
+</header>
+<main class="container">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="flash @(TempData["FlashKind"] as string ?? "ok")" data-auto-dismiss="8000">@flash</div>
+    }
+    @RenderBody()
+</main>
+<footer class="footer">
+    <div class="container">
+        <span>QIAD · Quantum Science</span>
+        <span>Only numbered cases are listed. Open cases appear as “Pending”.</span>
+    </div>
+</footer>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", false)
+</body>
+</html>

@@ -1,0 +1,97 @@
+@model PublicCasesViewModel
+@{
+    ViewData["Title"] = "Cases";
+}
+
+<h1>Case Database</h1>
+<p class="lead">All numbered QIAD cases. Open cases are shown as <em>Pending</em>; reasoning becomes visible once a case closes.</p>
+
+<form method="get" class="filters">
+    <select name="type" aria-label="Case type">
+        <option value="">All types</option>
+        @foreach (var category in Model.Categories)
+        {
+            <option value="@category" selected="@(category == Model.CategoryFilter)">@category</option>
+        }
+    </select>
+    <select name="verdict" aria-label="Outcome">
+        <option value="">Any outcome</option>
+        @foreach (var v in new[] { "Accepted", "Rejected", "Other", "Pending", "Voided" })
+        {
+            <option value="@v" selected="@(v == Model.VerdictFilter)">@v</option>
+        }
+    </select>
+    <input type="number" name="number" placeholder="Case #" value="@Model.NumberSearch" min="1" style="width:110px" />
+    <button type="submit" class="btn secondary">Filter</button>
+</form>
+
+<div class="table-scroll">
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Opened</th>
+            <th>Closed</th>
+            <th>Resolution</th>
+            <th>Verdict</th>
+            <th>Description</th>
+            <th>Archived by</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Cases.Items.Count == 0)
+        {
+            <tr><td colspan="8" class="empty">No cases match the current filter.</td></tr>
+        }
+        @foreach (var row in Model.Cases.Items)
+        {
+            <tr>
+                <td class="num">@row.CaseNumber</td>
+                <td>@row.DisplayType</td>
+                <td class="date">@row.Opened.ToString("yyyy-MM-dd")</td>
+                <td class="date">@(row.Closed?.ToString("yyyy-MM-dd") ?? "—")</td>
+                <td class="dim">@(row.ResolutionTime is { } t ? $"{Math.Max(t.TotalDays, 0):0.#} d" : "—")</td>
+                <td>
+                    @if (row.Status == CaseStatus.Voided)
+                    {
+                        <span class="badge voided">Voided</span>
+                    }
+                    else if (row.IsPending)
+                    {
+                        <span class="badge pending">Pending</span>
+                    }
+                    else
+                    {
+                        <span class="badge @(row.Verdict?.ToString().ToLowerInvariant())">@row.Verdict</span>
+                    }
+                </td>
+                <td class="desc">
+                    @(row.Description ?? "")
+                    @if (!string.IsNullOrWhiteSpace(row.DirectorsNote))
+                    {
+                        <br /><em>Director's note: @row.DirectorsNote</em>
+                    }
+                </td>
+                <td class="dim">@(row.ArchivedBy ?? "—")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="pager">
+    @if (Model.Cases.Page > 1)
+    {
+        <a class="btn secondary small" asp-action="Index"
+           asp-route-page="@(Model.Cases.Page - 1)" asp-route-type="@Model.CategoryFilter"
+           asp-route-verdict="@Model.VerdictFilter">‹ Newer</a>
+    }
+    <span>Page @Model.Cases.Page of @Math.Max(Model.Cases.TotalPages, 1) · @Model.Cases.TotalCount cases</span>
+    @if (Model.Cases.Page < Model.Cases.TotalPages)
+    {
+        <a class="btn secondary small" asp-action="Index"
+           asp-route-page="@(Model.Cases.Page + 1)" asp-route-type="@Model.CategoryFilter"
+           asp-route-verdict="@Model.VerdictFilter">Older ›</a>
+    }
+</div>

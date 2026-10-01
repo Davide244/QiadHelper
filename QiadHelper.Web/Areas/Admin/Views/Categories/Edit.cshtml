@@ -1,0 +1,73 @@
+@model CategoryEditModel
+@{
+    ViewData["Title"] = Model.Id == null ? "New category" : $"Edit {Model.Name}";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post" asp-action="Edit" class="stacked">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <label>Name <input asp-for="Name" required /></label>
+    <label>Description <textarea asp-for="Description" rows="2"></textarea></label>
+
+    <div class="row">
+        <label>Sort order <input asp-for="SortOrder" type="number" /></label>
+        <label>Numbering series
+            <select asp-for="NumberSeries">
+                <option value="@CaseNumberSeries.Cases">Cases</option>
+                <option value="@CaseNumberSeries.Incidents">Incidents</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="row">
+        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+        <label><input asp-for="ShowOnPublicForm" type="checkbox" /> Offered to appellants</label>
+    </div>
+
+    <label>Submission channel ID (where the panel is posted) <input asp-for="SubmissionChannelId" /></label>
+    <label>Button label <input asp-for="ButtonLabel" required /></label>
+    <label>Panel text (criteria, cooldowns, …) <textarea asp-for="PanelText" rows="4"></textarea></label>
+
+    <div class="row">
+        <label><input asp-for="OfferUnfairAppeals" type="checkbox" /> Offer an unfair-appeal button on the panel</label>
+        <label>Unfair button label <input asp-for="UnfairButtonLabel" placeholder="Start an Unfair Appeal" /></label>
+    </div>
+
+    <label>Review forum channel ID (empty = global default) <input asp-for="ForumChannelId" /></label>
+
+    <div class="row">
+        <label>Verdict ratifier (min. rank)
+            <select asp-for="VerdictRatifierMinRank">
+                @foreach (var rank in Enum.GetValues<QiadRank>().Where(r => r != QiadRank.Unranked))
+                {
+                    <option value="@rank">@rank.DisplayName()</option>
+                }
+            </select>
+        </label>
+        <label>Void ratifier (min. rank)
+            <select asp-for="VoidRatifierMinRank">
+                @foreach (var rank in Enum.GetValues<QiadRank>().Where(r => r != QiadRank.Unranked))
+                {
+                    <option value="@rank">@rank.DisplayName()</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <div class="row">
+        <label>Rejection restriction role ID (whitelisted; empty = none)
+            <input asp-for="RejectionRestrictionRoleId" placeholder="Applied automatically when a rejection executes" />
+        </label>
+        <label>Rejection restriction duration (days; empty = permanent)
+            <input asp-for="RejectionRestrictionDays" type="number" step="0.5" min="0.5" />
+        </label>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="btn">Save</button>
+        <a class="btn secondary" asp-action="Index">Cancel</a>
+    </div>
+</form>

@@ -1,0 +1,52 @@
+@using QiadHelper.Web.Areas.Admin.Controllers
+@model ImportConfirmViewModel
+@{
+    ViewData["Title"] = "Confirm restore";
+    var keys = Model.FileCounts.Keys.Union(Model.CurrentCounts.Keys).ToList();
+}
+
+<h1>Confirm restore</h1>
+<p class="lead">
+    Backup exported <strong>@Model.ExportedAtUtc.ToString("u")</strong>
+    by <strong>@(Model.ExportedBy ?? "unknown")</strong>.
+    Review what will replace what; this cannot be undone.
+</p>
+
+<div class="table-scroll">
+    <table>
+        <thead>
+        <tr>
+            <th>Table</th>
+            <th>Currently in database (will be deleted)</th>
+            <th>In backup file (will be restored)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var key in keys)
+        {
+            <tr>
+                <td>@key</td>
+                <td class="dim">@Model.CurrentCounts.GetValueOrDefault(key)</td>
+                <td><strong>@Model.FileCounts.GetValueOrDefault(key)</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<form method="post" asp-action="Import" class="stacked">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="token" value="@Model.Token" />
+    <label>
+        Type <code>@MaintenanceController.ConfirmationPhrase</code> to confirm
+        <input name="confirmPhrase" autocomplete="off" required />
+    </label>
+    <label style="display:flex;align-items:center;gap:.5rem">
+        <input type="checkbox" name="acknowledgeIrreversible" value="true" />
+        I understand the current database will be irreversibly replaced by this file.
+    </label>
+    <div class="actions">
+        <button type="submit" class="btn danger">Replace the database now</button>
+        <a class="btn secondary" asp-action="Index">Cancel</a>
+    </div>
+</form>

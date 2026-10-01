@@ -1,0 +1,154 @@
+@model AdminCaseDetailViewModel
+@{
+    var c = Model.Case;
+    ViewData["Title"] = c.CaseNumber != null ? $"Case #{c.CaseNumber}" : "Case (unnumbered)";
+}
+
+<h1>@ViewData["Title"] <small>· @(c.IsUnfair ? $"Unfair {c.Category?.Name}" : c.Category?.Name) · @c.Status</small></h1>
+
+<div class="detail-grid">
+    <dl class="kv">
+        <dt>Appellant</dt>
+        <dd>@c.AppellantDiscordUsername (@c.AppellantDiscordUserId)</dd>
+        <dt>Subject (Roblox)</dt>
+        <dd>@(c.SubjectRobloxUsername ?? "—")</dd>
+        <dt>Reported ban reason</dt>
+        <dd>@(c.ReportedBanReason ?? "—")</dd>
+        <dt>Submitted</dt>
+        <dd>@c.SubmittedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+        <dt>Claimed</dt>
+        <dd>@(c.ClaimedAt != null ? $"{c.ClaimedAt:yyyy-MM-dd HH:mm} by {c.ClaimedByUsername}" : "—")</dd>
+        <dt>Closed</dt>
+        <dd>@(c.ClosedAt != null ? $"{c.ClosedAt:yyyy-MM-dd HH:mm} by {c.ClosedByUsername}" : "—")</dd>
+    </dl>
+    <dl class="kv">
+        <dt>Verdict</dt>
+        <dd>@(c.Verdict?.ToString() ?? "—") @(c.RatifiedByUsername != null ? $"(ratified by {c.RatifiedByUsername})" : "")</dd>
+        <dt>Decision reasoning (internal)</dt>
+        <dd>@(c.DecisionReasoning ?? "—")</dd>
+        <dt>Public verdict text</dt>
+        <dd>@(c.Reasoning ?? "—")</dd>
+        <dt>Void reason</dt>
+        <dd>@(c.VoidReason?.DisplayName() ?? "—")</dd>
+        <dt>Void reasoning</dt>
+        <dd>@(c.VoidReasoning ?? "—")</dd>
+        <dt>Misc filing</dt>
+        <dd>@(c.IsMisc ? c.MiscFilingType?.ToString() : "—")</dd>
+        <dt>Evidence link</dt>
+        <dd>
+            @if (!string.IsNullOrWhiteSpace(c.ExternalEvidenceUrl))
+            {
+                <a href="@c.ExternalEvidenceUrl" rel="noopener noreferrer" target="_blank">@c.ExternalEvidenceUrl</a>
+            }
+            else
+            {
+                <text>—</text>
+            }
+        </dd>
+        <dt>Request context</dt>
+        <dd>@(c.RequestContext ?? "—")</dd>
+        <dt>Review thread</dt>
+        <dd>@(c.ForumThreadId != null ? $"{c.ForumChannelId} / {c.ForumThreadId}" : "not created")</dd>
+        <dt>Tracking (dummy) case</dt>
+        <dd>@(c.IsTracking ? "yes (handled outside the system)" : "no")</dd>
+        <dt>Imported from Sheet</dt>
+        <dd>@(c.IsImported ? "yes" : "no")</dd>
+    </dl>
+</div>
+
+<h2>Actions</h2>
+<div class="actions">
+    @if (c.Status is CaseStatus.Closed or CaseStatus.Voided)
+    {
+        <form method="post" asp-action="Seal" asp-route-id="@c.Id" class="inline-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="seal" value="true" />
+            <button type="submit" class="btn danger">Seal (hide from public)</button>
+        </form>
+    }
+    @if (c.Status == CaseStatus.Sealed)
+    {
+        <form method="post" asp-action="Seal" asp-route-id="@c.Id" class="inline-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="seal" value="false" />
+            <button type="submit" class="btn">Unseal</button>
+        </form>
+    }
+</div>
+
+<h2>DM the appellant</h2>
+<form method="post" asp-action="SendDm" asp-route-id="@c.Id" class="stacked">
+    @Html.AntiForgeryToken()
+    <label>
+        Message
+        <textarea name="message" rows="3" maxlength="2000" required></textarea>
+    </label>
+    <div><button type="submit" class="btn">Send via bot</button></div>
+</form>
+
+<h2>Evidence (@Model.Evidence.Count)</h2>
+<table>
+    <thead>
+    <tr>
+        <th>When</th>
+        <th>From</th>
+        <th>Text</th>
+        <th>Attachment</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Evidence.Count == 0)
+    {
+        <tr><td colspan="4">No evidence filed.</td></tr>
+    }
+    @foreach (var item in Model.Evidence)
+    {
+        <tr>
+            <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@item.SubmittedByUsername @(item.IsFromAppellant ? "(appellant)" : "(staff)")</td>
+            <td class="desc">@(item.Text ?? "—")</td>
+            <td>
+                @if (item.AttachmentUrl != null)
+                {
+                    <a href="@item.AttachmentUrl" rel="noopener noreferrer" target="_blank">@(item.AttachmentFileName ?? "file")</a>
+                }
+                else
+                {
+                    <text>—</text>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h2>Restrictions from this case (@Model.Restrictions.Count)</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Applied</th>
+        <th>Target</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Expires</th>
+        <th>Reason</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Restrictions.Count == 0)
+    {
+        <tr><td colspan="6">None.</td></tr>
+    }
+    @foreach (var r in Model.Restrictions)
+    {
+        <tr>
+            <td>@r.AppliedAt.ToString("yyyy-MM-dd")</td>
+            <td>@(r.TargetDiscordUsername ?? r.TargetDiscordUserId.ToString())</td>
+            <td>@r.RoleId</td>
+            <td>@r.Status</td>
+            <td>@(r.ExpiresAt?.ToString("yyyy-MM-dd") ?? "permanent")</td>
+            <td class="desc">@r.Reason</td>
+        </tr>
+    }
+    </tbody>
+</table>

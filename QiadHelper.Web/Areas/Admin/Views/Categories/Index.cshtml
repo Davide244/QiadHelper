@@ -1,0 +1,47 @@
+@model IReadOnlyList<CaseCategory>
+@{
+    ViewData["Title"] = "Case categories";
+}
+
+<h1>Case categories</h1>
+<p class="lead">Each category drives an intake panel (channel + button) and carries its own ratification gates.</p>
+
+<div class="actions" style="margin-bottom:1rem">
+    <a class="btn" asp-action="Edit">New category</a>
+    <form method="post" asp-action="SyncPanels" class="inline-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn secondary">Re-sync intake panels</button>
+    </form>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Series</th>
+        <th>Active</th>
+        <th>Public</th>
+        <th>Panel channel</th>
+        <th>Forum</th>
+        <th>Verdict gate</th>
+        <th>Void gate</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var category in Model)
+    {
+        <tr>
+            <td><strong>@category.Name</strong></td>
+            <td>@category.NumberSeries</td>
+            <td>@(category.IsActive ? "✔" : "—")</td>
+            <td>@(category.ShowOnPublicForm ? "✔" : "—")</td>
+            <td>@(category.SubmissionChannelId?.ToString() ?? "—")</td>
+            <td>@(category.ForumChannelId?.ToString() ?? "default")</td>
+            <td>@category.VerdictRatifierMinRank.ShortName()+</td>
+            <td>@category.VoidRatifierMinRank.ShortName()+</td>
+            <td><a class="btn secondary small" asp-action="Edit" asp-route-id="@category.Id">Edit</a></td>
+        </tr>
+    }
+    </tbody>
+</table>

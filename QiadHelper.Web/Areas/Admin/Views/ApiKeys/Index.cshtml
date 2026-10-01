@@ -1,0 +1,114 @@
+@using QiadHelper.Core.Data.Security
+@using QiadHelper.Web.Services.Security
+@model IReadOnlyList<ApiKeyInfo>
+@{
+    ViewData["Title"] = "API keys";
+}
+
+<h1>API keys</h1>
+<p class="lead">Scoped, hashed, rate-limited keys for external integrations. The bot needs no key; it runs in-process.</p>
+
+@if (TempData["NewApiKey"] is string newKey)
+{
+    <div class="flash ok">
+        <strong>Copy this key now; it will never be shown again:</strong>
+        <code style="user-select:all">@newKey</code>
+    </div>
+}
+
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Prefix</th>
+        <th>Scope</th>
+        <th>Created</th>
+        <th>Expires</th>
+        <th>Last used</th>
+        <th>Uses</th>
+        <th>Status</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Count == 0)
+    {
+        <tr><td colspan="9">No keys yet.</td></tr>
+    }
+    @foreach (var key in Model)
+    {
+        <tr>
+            <td><strong>@key.Name</strong><br /><small>@key.Description</small></td>
+            <td><code>@key.KeyPrefix</code></td>
+            <td>@key.Scope</td>
+            <td>@key.CreatedAt.ToString("yyyy-MM-dd")</td>
+            <td>@(key.ExpiresAt?.ToString("yyyy-MM-dd") ?? "never")</td>
+            <td>@(key.LastUsedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+            <td>@key.TotalUsageCount</td>
+            <td>
+                @if (key.LockedUntil > DateTime.UtcNow)
+                {
+                    <span class="badge rejected">Locked</span>
+                }
+                else if (!key.IsActive)
+                {
+                    <span class="badge voided">Revoked</span>
+                }
+                else
+                {
+                    <span class="badge accepted">Active</span>
+                }
+            </td>
+            <td>
+                @if (key.LockedUntil > DateTime.UtcNow)
+                {
+                    <form method="post" asp-action="Unlock" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@key.Id" />
+                        <button type="submit" class="btn secondary small">Unlock</button>
+                    </form>
+                }
+                @if (key.IsActive)
+                {
+                    <form method="post" asp-action="Revoke" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@key.Id" />
+                        <button type="submit" class="btn danger small">Revoke</button>
+                    </form>
+                }
+                else
+                {
+                    <form method="post" asp-action="Delete" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@key.Id" />
+                        <button type="submit" class="btn danger small">Delete</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h2>Create key</h2>
+<form method="post" asp-action="Create" class="stacked">
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <label>Name <input name="name" required /></label>
+        <label>Scope
+            <select name="scope">
+                <option value="@ApiKeyScope.ReadOnly" selected>ReadOnly (cases + stats)</option>
+                <option value="@ApiKeyScope.ReadCases">ReadCases</option>
+                <option value="@ApiKeyScope.ReadStats">ReadStats</option>
+                <option value="@ApiKeyScope.Full">Full (includes Admin)</option>
+            </select>
+        </label>
+    </div>
+    <div class="row">
+        <label>Expires in (days, 0 = never) <input name="expiresInDays" type="number" value="90" /></label>
+        <label>Rate limit per minute <input name="rateLimitPerMinute" type="number" value="60" /></label>
+    </div>
+    <label>Allowed IPs (comma-separated, CIDR ok; empty = any) <input name="allowedIps" /></label>
+    <label>Description <input name="description" /></label>
+    <div><button type="submit" class="btn">Create</button></div>
+</form>

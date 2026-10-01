@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = $"Error {ViewBag.Code}";
+}
+
+<div class="error-page">
+    <div class="code">@ViewBag.Code</div>
+    <p>@ViewBag.Message</p>
+    @if (ViewBag.ShowLogin == true)
+    {
+        <a class="btn" asp-controller="Auth" asp-action="Login">Sign in with Discord</a>
+    }
+    else
+    {
+        <a class="btn secondary" asp-controller="Public" asp-action="Index">Back to the case database</a>
+    }
+</div>
